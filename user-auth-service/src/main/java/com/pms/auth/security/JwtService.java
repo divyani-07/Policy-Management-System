@@ -80,4 +80,9 @@ public class JwtService {
 
     }
 
+    public Date extractExpiration(String token) {
+        return parseClaims(token).getExpiration();
+        // getExpiration() returns the "exp" claim as a Java Date object
+    }
+
 }

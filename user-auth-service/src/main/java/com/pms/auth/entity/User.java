@@ -4,6 +4,8 @@ package com.pms.auth.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 @Entity
 @Table(name = "tbl_users")
@@ -26,4 +28,21 @@ public class User {
     private Role role;             // ADMIN, AGENT, CUSTOMER
 
     private Boolean isActive = true;  // Default: account is active
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;   // set once on insert, never changed
+
+    private LocalDateTime updatedAt;   // updated every time record changes
+
+    // Runs automatically before INSERT — sets createdAt
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    // Runs automatically before UPDATE — sets updatedAt
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

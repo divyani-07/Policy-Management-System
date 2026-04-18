@@ -1,29 +1,43 @@
 package com.pms.auth.controller;
 
-import com.pms.auth.dto.LoginRequestDTO;
-import com.pms.auth.dto.LoginResponseDTO;
+import com.pms.auth.dto.*;
 import com.pms.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
-@RestController           // @Controller + @ResponseBody — returns JSON automatically
-@RequestMapping("/api/auth")  // All endpoints here start with /api/auth
+@RestController
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/login")   // POST /api/auth/login
-    public ResponseEntity<LoginResponseDTO> login(
-            @Valid @RequestBody LoginRequestDTO request) {
-        // @RequestBody = read JSON from request body
-        // @Valid = run the @NotBlank validations from the DTO
+    // POST /api/auth/login — PUBLIC
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
+        return ResponseEntity.ok(authService.login(request));
+    }
 
-        LoginResponseDTO response = authService.login(request);
-        return ResponseEntity.ok(response);  // 200 OK + response body as JSON
+    // POST /api/auth/logout — AUTHENTICATED
+    // SecurityConfig already ensures only authenticated users reach here
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(
+            @RequestHeader("Authorization") String authHeader) {
+        // @RequestHeader reads the "Authorization" header directly
+
+        authService.logout(authHeader);
+        return ResponseEntity.ok("Logged out successfully");
+    }
+
+    // GET /api/auth/validate — INTERNAL (called by other microservices)
+    // No @PreAuthorize — other services pass their own token for validation
+    @GetMapping("/validate")
+    public ResponseEntity<ValidateTokenResponseDTO> validate(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        // required = false → don't throw error if header missing, we handle it ourselves
+
+        return ResponseEntity.ok(authService.validateToken(authHeader));
     }
 }
